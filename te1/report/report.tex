@@ -1,0 +1,136 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}         % Flere tegn
+\usepackage{babel}            % Språk
+\usepackage{amsmath, amssymb} % Bedre mattemiljø, flere symboler
+\usepackage{enumitem}         % Bedre lister
+\usepackage{float, graphicx}  % Figurer
+\usepackage{booktabs}         % Bedre tabeller
+\usepackage{import}           % Importer bilder fra Inkscape, pgf etc.
+\usepackage{xifthen}          % Flere kondisjonelle kommandoer
+\usepackage{pdfpages}         % Sett inn pdf som figur
+\usepackage{transparent}
+\usepackage{listings}
+\usepackage[parfill]{parskip}
+\usepackage[
+  margin=1.5cm,
+  includefoot,
+  footskip=30pt,
+]{geometry}
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+\lstset{
+  backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
+  basicstyle=\ttfamily,            % the size of the fonts that are used for the code
+  breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{gray},       % comment style
+  deletekeywords={...},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+  firstnumber=0000,                % start line enumeration with line 1000
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{mygreen},    % keyword style
+  language=C,                      % the language of the code
+  morekeywords={version},          % if you want to add more keywords to the set
+  numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=5pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding particular underscores
+  stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{mymauve},     % string literal style
+  tabsize=4,	                   % sets default tabsize to 2 spaces
+  title=\lstname,                  % show the filename of files included with \lstinputlisting; also try caption instead of title
+  frame=single,
+}
+\author{
+    Fagervik, Jørgen\\
+    Håkonsen, Iver
+}
+\title{Theoretical Exercise 1 -- TDT4205}
+
+% Figurer fra Inkscape konvertert til pdf+LaTeX inluderes med \incfig{...}
+\newcommand{\incfig}[2][1]{%
+    \def\svgwidth{#1\columnwidth}
+    \import{./figures/}{#2.pdf_tex}
+}
+
+
+\begin{document}
+\maketitle
+
+\subsection*{Parameter passing}
+
+The value returned from the \texttt{main} function is 23. The arguments to
+\texttt{increment\_with\_value} are \texttt{int}s, which means that the function will be called by
+value, not by reference. For the function to work as the name intends, the type of the parameter
+\texttt{a} instead has to be \texttt{int *}. 
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int a = 23;
+void increment_with_value(int *a, int b) {
+    *a += b;
+}
+
+int main(void) {
+    increment_with_value(&a, 1);
+    return a; // 24
+}
+\end{lstlisting}
+
+
+\subsection*{Symbols}
+
+\texttt{b} is a local variable inside the function \texttt{increment\_with\_value}, and will be
+allocated on the stack when the function is called.
+
+\subsection*{C arrays}
+\begin{enumerate}[label=\alph*.]
+    \item The call to \texttt{strcpy} copies the 14 chars stored in \texttt{t} into \texttt{s}, but
+        \texttt{s} only fits 12 chars. \texttt{strcpy} does not do bounds checking at all, and
+        writes 2 chars beyond, and overflows into \texttt{foo}. \texttt{foo} is an \texttt{int},
+        so it at least two bytes wide, and the values \texttt{'2'} and \texttt{'3'} are written into
+        it, i.e., \texttt{foo} is now \texttt{0x3332}, or 13106 in decimal. This leads to
+        \texttt{foo = 13106} being printed.
+
+    \item This problem is known as buffer overflow, which happens when a program either reads or
+        writes beyond the allocated space of an array.
+
+    \item Some patched versions of \texttt{gcc} has this option set already, and it has to be disabled with
+        \texttt{-fno-stack-protector}. In stock versions of \texttt{gcc} it has to be enabled with
+        \texttt{-fstack-protector}.
+
+    \item If line 5 was replaced with \texttt{static int foo = 0;}, the problem in this particular
+        case would be solved. \texttt{foo} would be allocated in static memory instead of on the
+        stack, and the stack smashing would not hit it. It does not solve the underlying problem of
+        stack smashing.
+\end{enumerate}
+
+\newpage
+\subsection*{Functions and variables}
+\begin{enumerate}[label=\alph*.]
+    \item \
+
+        \begin{tabular}{ll}
+            Symbol           & Memory segment \\ \hline
+            \texttt{rec()}   & text\\
+            \texttt{c}       & Initialized Data Segment, read-only area \\
+            \texttt{d}       & Uninitialized Data Segment (bss) \\
+            \texttt{counter} & Uninitialized Data Segment (bss) \\
+            \texttt{a}       & Stack\\ \hline
+        \end{tabular}
+    \item
+        Running the program causes a segmentation fault, caused by a stack overflow.
+\end{enumerate}
+
+\end{document}
